@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Lugar</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+
+        <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" >
+        <!---librerias--->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+
+        <script>
+//pintara tabla
+            /* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+$(document).ready(
+        function () {
+            $('#tbLugar').DataTable(
+                    {
+                        "ajax": "ConsultaLugar",
+
+                        "columns": [//Atributos que se pondrán en cada columna
+                            {"data": "idlugarR"},
+                            {"data": "nomLugar"},
+                            {"data": "descripcion"},
+                            {"data": "direccion"},
+                         
+                            {"data":
+                                        function (row) {
+                                            var r = row['idlugarR'] + "-" + row['nomLugar'] + "-" + row['descripcion'] + "-" + row['direccion'];//Acceder
+                                            console.log('valor de r' + r);
+                                            var botones = "<button id='btnBorrar' class='btn btn-primary btn-xs' onClick='deleteLugar(" + row['idlugarR'] + ")'>Borrar</button>";
+                                            botones += "<button id='btnEditar' class='btn btn-xs btn-danger' onClick='showLugar(" + row['idlugarR'] + ",\"" + row['nomLugar'] + "\",\""
+                                                    + row['descripcion'] + "\",\"" + row['direccion'] +"\")'>Editar</button>";
+                                            return botones;
+                                        }
+                            }
+                        ]
+                    });
+
+
+            //valida los campos
+            $('#frmLugar').validate({
+                rules: {
+                    nomLugar: {
+                        required: true
+                    },
+                    descripcion: {
+                        required: true
+                    },
+                    direccion: {
+                        required: true
+                    }
+                },
+                messages: {
+                    nomLugar: {
+                        required: "El nombre lugar es requerido"
+                    }
+                },
+                highlight: function (element) {
+                    $(element).closest('.form-group').addClass('has-error');
+                },
+                unhighlight: function (element) {
+                    $(element).closest('.form-group').removeClass('has-error');
+                },
+                errorElement: 'span',
+                errorClass: 'help-block',
+                errorPlacement: function (error, element) {
+                    if (element.parent('.input-group'.length)) {
+                        error.insertAfter(element.parent());
+                    } else {
+                        error.insertAfter(element)
+                    }
+                },
+                submitHandler: function (form) {
+                    console.log('Formulario válido');
+                    nuevoLugar();
+                    return false;
+                }
+
+
+            });
+
+            //validar forma modal
+            $('#frmLugar2').validate({
+                rules: {
+
+                    nomLugar2: {
+                        required: true
+                    },
+                    descripcion2: {
+                        required: true
+                    },
+                    direccion2: {
+                        required: true
+                    }
+                },
+                messages: {
+                    nomLugar2: {
+                        required: "El nomLugar del lugar es requerido"
+                    },
+                    descripcion2: {
+                        required: "La descripcion es requerido"
+                    },
+                    direccion2: {
+                        required: "La direccion es requerido"
+                    }
+                },
+                highlight: function (element) {
+                    $(element).closest('.form-group').addClass('has-error');
+                },
+                unhighlight: function (element) {
+                    $(element).closest('.form-group').removeClass('has-error');
+                },
+                errorElement: 'span',
+                errorClass: 'help-block',
+                errorPlacement: function (error, element) {
+                    if (element.parent('.input-group'.length)) {
+                        error.insertAfter(element.parent());
+                    } else {
+                        error.insertAfter(element)
+                    }
+                },
+                submitHandler: function (form) {
+                    console.log('Formulario modal válido');
+                    updateLugar();
+                    return false;
+                }
+
+
+            });
+
+            //cuando apareza mi showmodal guardar datos en la bd
+            $('#btnEditar').on('click', function () {
+                $('#frmLugar2').submit();
+            });
+
+        }); // que se ejecute ya que esté listo
+//FUNCIONES DEL CRUD
+function deleteLugar(idlugarR) {
+
+    //Utilizando Ajax para realizar una petición al servlet que elimina personas
+    $.ajax({
+        url: "EliminaLugar", //Url del Servlet
+        type: "POST", //Método HTTP por el que se hace la petición
+        data: {//Es la información que mando al servlet
+            idlugarR: idlugarR
+        }
+    }).done(function (json) { //Se ejecuta cuando todo sale bien
+        // alert(json.msj);
+        Swal.fire('La operacion se realizo correctamente');
+        //Refrescando la tabla
+        $('#tbLugar').dataTable().api().ajax.reload();
+    }).fail(function (json) { //Se ejecuta cuando algo sale mal
+        alert(json.msj);
+
+        //alert("error");
+    });
+}
+
+
+
+//
+function nuevoLugar() {
+    $.ajax({
+        url: 'NuevoLugar',
+        type: 'POST',
+        data: {
+            idlugarR: $("#idlugarR").val(),
+            nomLugar: $("#nomLugar").val(),
+            descripcion: $("#descripcion").val(),
+            direccion: $("#direccion").val()
+        }
+    }).done(function (json) { //Se ejecuta cuando todo sale bien
+        //alert(json.msj);
+        Swal.fire('Lugar registrado correctamente');
+        //Refrescando la tabla
+        $('#tbLugar').dataTable().api().ajax.reload();
+    }).fail(function (json) { //Se ejecuta cuando algo sale mal
+        alert(json.msj);
+    });
+
+
+}
+
+function showLugar(idlugarR, nomLugar, descripcion, direccion) {
+    $("#idlugarR2").val(idlugarR);
+    $("#nomLugar2").val(nomLugar);
+    $("#descripcion2").val(descripcion);
+    $("#direccion2").val(direccion);
+    $("#modalLugar").modal("show");
+
+}
+
+function updateLugar() {
+    $.ajax({
+        url: 'ActualizaLugar',
+        type: 'POST',
+        data: {
+            idlugarR: $("#idlugarR2").val(),
+            nomLugar: $("#nomLugar2").val(),
+            descripcion: $("#descripcion2").val(),
+            direccion: $("#direccion2").val()
+       }
+    }).done(function (json) { //Se ejecuta cuando todo sale bien
+        //alert(json.msj);
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Your work has been saved',
+            showConfirmButton: false,
+            timer: 1500
+        })
+
+        //Refrescando la tabla
+        $('#tbLugar').dataTable().api().ajax.reload();
+        //Cerrando el modal
+        $('#modalLugar').modal("toggle");
+    }).fail(function (json) { //Se ejecuta cuando algo sale mal
+        //alert(json.msj);
+        alert("error");
+    });
+}
+        </script>
+        <!--Modificacion de la llamada al script-->
+
+
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-sm bg-danger navbar-dark">
+  <ul class="navbar-nav">
+    <li class="nav-item active">
+      <a class="nav-link" href="RolPrueba.html">Usuario</a>
+    </li>
+    <li class="nav-item active">
+      <a class="nav-link" href="lugar_paseo.html">Lugar paseo</a>
+    </li>
+    <li class="nav-item active">
+      <a class="nav-link" href="Tipopaseo.html">Tipo paseo</a>
+    </li>
+     <li class="nav-item active" >
+      <a class="nav-link" href="index.html">Salir</a>
+    </li>
+  </ul>
+</nav>
+        <div id="modalLugar" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>   
+                        <h3>Modificar Lugar paseo</h3>
+                    </div>
+                    <div class="modal-body">
+                        <form class="col-lg-12" id="frmLugar2" method="POST">
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="form-group">
+                                    <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <span class="input-group-addon">Lugar</span>
+                                        <input class="form-control" id="idlugarR2" name="idlugarR2">
+                                    </div>      
+                                    <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <span class="input-group-addon">Nombre</span>
+                                        <input class="form-control"  id="nomLugar2" name="nomLugar2">
+                                    </div>  
+                                    <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <span class="input-group-addon">Descripcion</span>
+                                        <input id="descripcion2" name="descripcion2">
+                                    </div> 
+                                    <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <span class="input-group-addon">Direccion</span>
+                                        <input id="direccion2" name="direccion2">
+                                    </div> 
+                                </div>                                   
+                            </div>    
+                        </form>                      
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="btnEditar" class="btn btn-sm btn-primary">Guardar</button>
+                    </div>
+                </div>               
+            </div>
+        </div>
+
+        <div>
+            <h1>Lugar paseo</h1>
+
+            <div class="col-sm-6 col-md-6 col-lg-6 col-xs-12">
+                <form class="col-lg-12" id="frmLugar" method="POST">
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <div class="form-group">
+                            <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12l">
+                                <span class="input-group-addon">ID</span>
+                                <input class="form-control" id="idlugarR" name="idlugarR">
+                            </div>
+                            <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12l">
+                                <span class="input-group-addon">Nombre Lugar</span>
+                                <input class="form-control" id="nomLugar" name="nomLugar">
+                            </div>
+                            <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12l">
+                                <span class="input-group-addon">Descripcion</span>
+                                <input class="form-control" id="descripcion" name="descripcion">
+                            </div>
+                            <div class="input-group cocol-lg-12 col-md-12 col-sm-12 col-xs-12l">
+                                <span class="input-group-addon">Direccion</span>
+                                <input class="form-control" id="direccion" name="direccion">
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div align="right">
+                        <button type="submit" class="btn btn-primary btn-lg">Guardar</button> 
+                    </div>
+                </form>
+            </div>
+            <div class="col-sm-6 col-md-6 col-lg-6 col-xs-12">
+                <table id="tbLugar" >  
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre lugar</th>
+                            <th>Descripcion</th>
+                            <th>Direccion</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
